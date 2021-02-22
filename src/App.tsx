@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import ReactModal from 'react-modal';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const ReactModal = require('react-modal');
 
 import { Table, Button, InputGroup, Input } from 'reactstrap';
 import './App.css';
