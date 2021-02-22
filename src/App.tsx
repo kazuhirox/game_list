@@ -1,5 +1,5 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
+
 import { Table, Button } from 'reactstrap';
 import './App.css';
 
