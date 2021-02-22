@@ -5,7 +5,6 @@ module.exports = {
   },
   extends: [
     'plugin:react/recommended',
-    'airbnb-base',
     'airbnb',
     'airbnb/hooks',
     'plugin:import/errors',
