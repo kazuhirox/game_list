@@ -13,6 +13,8 @@ import {
 } from "reactstrap";
 import "./App.css";
 
+import dotenv from "dotenv";
+
 type gameType = {
   id: number;
   title: string;
@@ -83,7 +85,8 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
   const clear = () => {
-    alert(process.env.ENV_HOST);
+    dotenv.config();
+    alert(JSON.stringify(process.env));
     setTableData(data);
     setSearchString("");
     setSelectedPlatform(ALL_PLATFORM);
