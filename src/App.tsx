@@ -51,16 +51,21 @@ const App: React.FC = () => {
   // const toggle = () => setDropdownOpen((prevState) => !prevState);
 
   const sortFunc = (a: gameTitle, b: gameTitle) => {
-    if (a.platform < b.platform) {
+    const aPlatformLower = a.platform.toLowerCase();
+    const bPlatformLower = b.platform.toLowerCase();
+    const aTitleLower = a.title.toLowerCase();
+    const bTitleLower = b.title.toLowerCase();
+
+    if (aPlatformLower < bPlatformLower) {
       return -1;
     }
-    if (a.platform > b.platform) {
+    if (aPlatformLower > bPlatformLower) {
       return 1;
     }
-    if (a.title < b.title) {
+    if (aTitleLower < bTitleLower) {
       return -1;
     }
-    if (a.title > b.title) {
+    if (aTitleLower > bTitleLower) {
       return 1;
     }
     return 0;
@@ -163,12 +168,6 @@ const App: React.FC = () => {
     setTableData(narrowDown(text, selectedPlatform));
   };
 
-  // const dropdownChanged = (e: React.FormEvent<HTMLElement>) => {
-  //   const selected = e.currentTarget.innerText;
-  //   setSelectedPlatform(selected);
-  //   setTableData(narrowDown(searchString, selected));
-  // };
-
   const selectChanged = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value;
     setSelectedPlatform(selected);
@@ -186,19 +185,6 @@ const App: React.FC = () => {
               value={searchString}
               onChange={gameTitleChanged}
             />
-            {/* <Dropdown id="platforms" isOpen={dropdownOpen} toggle={toggle}>
-              <DropdownToggle caret>{selectedPlatform}</DropdownToggle>
-              <DropdownMenu>
-                <DropdownItem onClick={dropdownChanged} key="all">
-                  {ALL_PLATFORM}
-                </DropdownItem>
-                {platforms?.map((p) => (
-                  <DropdownItem onClick={dropdownChanged} key={p}>
-                    {p}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown> */}
             <select
               id="selectPlatform"
               className="form-select"
