@@ -39,7 +39,13 @@ const App: React.FC = () => {
       const gamesJson = (JSON.parse(games) as gameTitle[]).sort(sortFunc);
       data = Array.from(gamesJson);
       setTableData(gamesJson);
-      setPlatform(Array.from(new Set(gamesJson.map((v) => v.platform))));
+      setPlatform(
+        Array.from(new Set(gamesJson.map((v) => v.platform))).sort((a, b) => {
+          a = a.toString().toLowerCase();
+          b = b.toString().toLowerCase();
+          return a > b ? 1 : b > a ? -1 : 0;
+        }),
+      );
     }
   }, []);
   // const toggle = () => setDropdownOpen((prevState) => !prevState);
@@ -76,7 +82,13 @@ const App: React.FC = () => {
             });
           data = Array.from(games);
           setTableData(games);
-          setPlatform(Array.from(new Set(games.map((v) => v.platform))));
+          setPlatform(
+            Array.from(new Set(games.map((v) => v.platform))).sort((a, b) => {
+              a = a.toString().toLowerCase();
+              b = b.toString().toLowerCase();
+              return a > b ? 1 : b > a ? -1 : 0;
+            }),
+          );
 
           localStorage.clear();
           localStorage.setItem("games", JSON.stringify(games));
