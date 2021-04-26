@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import {
   Table,
@@ -6,16 +6,14 @@ import {
   InputGroup,
   Label,
   Input,
-  Dropdown,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem,
+  // Dropdown,
+  // DropdownToggle,
+  // DropdownMenu,
+  // DropdownItem,
 } from "reactstrap";
 import "./App.css";
 
-import dotenv from "dotenv";
-
-type gameType = {
+type gameTitle = {
   id: number;
   title: string;
   platform: string;
@@ -23,54 +21,77 @@ type gameType = {
 
 const ALL_PLATFORM = "すべて";
 
-let data: gameType[] = [];
+let data: gameTitle[] = [];
 
 // eslint-disable-next-line arrow-body-style
 const App: React.FC = () => {
-  const [tableData, setTableData] = useState<gameType[]>([]);
+  const [tableData, setTableData] = useState<gameTitle[]>([]);
   const [searchString, setSearchString] = useState<string>("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  // const [dropdownOpen, setDropdownOpen] = useState(false);
   const [platforms, setPlatform] = useState<string[]>();
   const [selectedPlatform, setSelectedPlatform] = useState<string>(
     ALL_PLATFORM,
   );
 
-  const toggle = () => setDropdownOpen((prevState) => !prevState);
+  useEffect(() => {
+    const games = localStorage.getItem("games");
+    if (games) {
+      const gamesJson = (JSON.parse(games) as gameTitle[]).sort(sortFunc);
+      data = Array.from(gamesJson);
+      setTableData(gamesJson);
+      setPlatform(Array.from(new Set(gamesJson.map((v) => v.platform))));
+    }
+  }, []);
+  // const toggle = () => setDropdownOpen((prevState) => !prevState);
+
+  const sortFunc = (a: gameTitle, b: gameTitle) => {
+    if (a.platform < b.platform) {
+      return -1;
+    }
+    if (a.platform > b.platform) {
+      return 1;
+    }
+    if (a.title < b.title) {
+      return -1;
+    }
+    if (a.title > b.title) {
+      return 1;
+    }
+    return 0;
+  };
 
   const importJson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e?.target?.files?.item(0);
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        const s = reader.result?.toString();
-        const a = s?.replaceAll("\r\n", "\n").split("\n");
-        const a2 = a?.map((v, i) => {
-          const g = v.split("\t");
-          const game: gameType = { id: i, title: g[1], platform: g[0] };
-          return game;
-        });
-        if (a2 !== undefined) {
-          setTableData(a2);
-          data = Array.from(a2);
-          const plist = Array.from(new Set(a2.map((g) => g.platform)));
-          const sortedPList = plist.sort();
-          setPlatform(sortedPList);
+        const jsonStr = reader.result?.toString();
+        if (jsonStr) {
+          let id = 0;
+          const games = (JSON.parse(jsonStr) as gameTitle[])
+            .sort(sortFunc)
+            .map((g) => {
+              g.id = id++;
+              return g;
+            });
+          data = Array.from(games);
+          setTableData(games);
+          setPlatform(Array.from(new Set(games.map((v) => v.platform))));
+
+          localStorage.clear();
+          localStorage.setItem("games", JSON.stringify(games));
         }
       };
       reader.readAsText(file);
     }
   };
   const exportJson = () => {
-    const sortData = tableData
-      .sort((a, b) => {
-        if (a.id < b.id) {
-          return -1;
-        }
-        if (a.id > b.id) {
-          return 1;
-        }
-
-        return 0;
+    let id = 0;
+    const sortData = data
+      .sort(sortFunc)
+      .map((g) => {
+        g.id = id++;
+        return g;
       })
       .filter((d) => d);
     const str = JSON.stringify(sortData);
@@ -85,11 +106,13 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
   const clear = () => {
-    dotenv.config();
-    alert(JSON.stringify(process.env));
     setTableData(data);
     setSearchString("");
     setSelectedPlatform(ALL_PLATFORM);
+    const selectObj = document.getElementById(
+      "selectPlatform",
+    ) as HTMLSelectElement;
+    selectObj.selectedIndex = 0;
   };
 
   const sortTitle = () =>
@@ -110,29 +133,35 @@ const App: React.FC = () => {
 
   const narrowDown = (title?: string, platform?: string) => {
     let narrowDownArray = data;
-    const t = title ? title : searchString;
     const p = platform ? platform : selectedPlatform;
-    narrowDownArray = narrowDownArray.filter((d) => d.title.includes(t));
+    if (title) {
+      narrowDownArray = narrowDownArray.filter((d) =>
+        d.title.toUpperCase().includes(title.toUpperCase()),
+      );
+    }
     if (p !== ALL_PLATFORM) {
       narrowDownArray = narrowDownArray.filter((d) => d.platform === p);
     }
 
     return narrowDownArray;
   };
-  const textChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const gameTitleChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
     setSearchString(text);
     setTableData(narrowDown(text, selectedPlatform));
   };
 
-  const dropdownChanged = (e: React.FormEvent<HTMLElement>) => {
-    const selected = e.currentTarget.innerText;
+  // const dropdownChanged = (e: React.FormEvent<HTMLElement>) => {
+  //   const selected = e.currentTarget.innerText;
+  //   setSelectedPlatform(selected);
+  //   setTableData(narrowDown(searchString, selected));
+  // };
+
+  const selectChanged = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = e.target.value;
     setSelectedPlatform(selected);
     setTableData(narrowDown(searchString, selected));
   };
-  // useEffect(() => {
-  //   setTableData(data);
-  // }, []);
 
   return (
     <div className="App">
@@ -143,9 +172,9 @@ const App: React.FC = () => {
               type="text"
               placeholder="ゲームタイトル"
               value={searchString}
-              onChange={textChanged}
+              onChange={gameTitleChanged}
             />
-            <Dropdown id="platforms" isOpen={dropdownOpen} toggle={toggle}>
+            {/* <Dropdown id="platforms" isOpen={dropdownOpen} toggle={toggle}>
               <DropdownToggle caret>{selectedPlatform}</DropdownToggle>
               <DropdownMenu>
                 <DropdownItem onClick={dropdownChanged} key="all">
@@ -157,7 +186,21 @@ const App: React.FC = () => {
                   </DropdownItem>
                 ))}
               </DropdownMenu>
-            </Dropdown>
+            </Dropdown> */}
+            <select
+              id="selectPlatform"
+              className="form-select"
+              onChange={selectChanged}
+            >
+              <option selected key={ALL_PLATFORM} value={ALL_PLATFORM}>
+                {ALL_PLATFORM}
+              </option>
+              {platforms?.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
           </InputGroup>
           <div className="text-right">
             <Button color="secondary" onClick={clear} className="m-1">
