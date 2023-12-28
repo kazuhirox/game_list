@@ -1,0 +1,12 @@
+{
+  "extends": ["next/core-web-vitals", "prettier", "next"],
+  "plugins": ["react", "@typescript-eslint", "import", "unused-imports"],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "project": "./tsconfig.json",
+    "sourceType": "module"
+  }
+}
