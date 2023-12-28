@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import { IEnumerable, from } from "linq-to-typescript";
+import LoadingSpinner from "@/components/loadingSpinner";
 
 type gameTitle = {
   title: string;
@@ -35,6 +36,7 @@ export default function Home() {
   const [platforms, setPlatform] = useState<string[]>();
   const [selectedPlatform, setSelectedPlatform] =
     useState<string>(ALL_PLATFORM);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const narrowDown = (title?: string, platform?: string) => {
     let narrowDownArray = games;
@@ -66,50 +68,63 @@ export default function Home() {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        const jsonStr = reader.result?.toString();
-        if (jsonStr) {
-          const games = from(JSON.parse(jsonStr) as gameTitle[])
-            .orderBy(v => v.platform.toLowerCase())
-            .thenBy(v => v.title.toLowerCase());
-          setGames(games);
-          setTableData(games);
-          setPlatform([
-            ALL_PLATFORM,
-            ...games
-              .select(g => g.platform)
-              .distinct()
-              .orderBy(p => p.toLowerCase())
-              .toArray(),
-          ]);
+        try {
+          const jsonStr = reader.result?.toString();
+          if (jsonStr) {
+            const games = from(JSON.parse(jsonStr) as gameTitle[])
+              .orderBy(v => v.platform.toLowerCase())
+              .thenBy(v => v.title.toLowerCase());
+            setGames(games);
+            setTableData(games);
+            setPlatform([
+              ALL_PLATFORM,
+              ...games
+                .select(g => g.platform)
+                .distinct()
+                .orderBy(p => p.toLowerCase())
+                .toArray(),
+            ]);
 
-          localStorage.clear();
-          localStorage.setItem("games", JSON.stringify(games.toArray()));
+            localStorage.clear();
+            localStorage.setItem("games", JSON.stringify(games.toArray()));
+          }
+        } finally {
+          setIsLoading(false);
         }
       };
+      setIsLoading(true);
       reader.readAsText(file);
     }
   };
 
   useEffect(() => {
-    const gamesStr = localStorage.getItem("games");
-    if (gamesStr) {
-      const games = JSON.parse(gamesStr) as gameTitle[];
-      if (games.length >= 0) {
-        setGames(from(games));
-        setTableData(from(games));
-        setPlatform([
-          ALL_PLATFORM,
-          ...from(games)
-            .select(g => g.platform)
-            .distinct()
-            .orderBy(p => p.toLowerCase())
-            .toArray(),
-        ]);
+    setIsLoading(true);
+    new Promise<void>(resolve => {
+      const gamesStr = localStorage.getItem("games");
+      if (gamesStr) {
+        const games = JSON.parse(gamesStr) as gameTitle[];
+        if (games.length >= 0) {
+          setGames(from(games));
+          setTableData(from(games));
+          setPlatform([
+            ALL_PLATFORM,
+            ...from(games)
+              .select(g => g.platform)
+              .distinct()
+              .orderBy(p => p.toLowerCase())
+              .toArray(),
+          ]);
+        }
       }
-    }
+      resolve();
+    }).then(() => {
+      setIsLoading(false);
+    });
   }, []);
 
-  return (
+  return isLoading ? (
+    <LoadingSpinner />
+  ) : (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
         <Input
