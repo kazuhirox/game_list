@@ -42,9 +42,22 @@ export default function Home() {
     let narrowDownArray = games;
     const p = platform ?? selectedPlatform;
     if (title) {
-      narrowDownArray = narrowDownArray.where(d =>
-        d.title.toUpperCase().includes(title.toUpperCase()),
-      );
+      const _title = title.trim();
+      if (_title.includes(" OR")) {
+        const _narrowDownArray: gameTitle[] = [];
+        _title.split(" OR").forEach(t => {
+          if (t.trim() === "") return;
+          const _games = games
+            .where(d => d.title.toUpperCase().includes(t.trim().toUpperCase()))
+            .toArray();
+          _narrowDownArray.push(..._games);
+        });
+        narrowDownArray = from(_narrowDownArray);
+      } else {
+        narrowDownArray = narrowDownArray.where(d =>
+          d.title.toUpperCase().includes(_title.toUpperCase()),
+        );
+      }
     }
     if (p !== ALL_PLATFORM) {
       narrowDownArray = narrowDownArray.where(d => d.platform === p);
