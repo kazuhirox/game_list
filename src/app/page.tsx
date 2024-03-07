@@ -42,7 +42,7 @@ export default function Home() {
     let narrowDownArray = games;
     const p = platform ?? selectedPlatform;
     if (title) {
-      const _title = title.trim();
+      const _title = title.trim().replace(/ OR/gi, " OR");
       if (_title.includes(" OR")) {
         const _narrowDownArray: gameTitle[] = [];
         _title.split(" OR").forEach(t => {
